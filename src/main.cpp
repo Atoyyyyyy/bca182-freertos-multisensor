@@ -9,6 +9,14 @@
    System clock = 8 MHz
    ========================================================= */
 
+   struct SensorData
+{
+    float temperature;
+    float humidity;
+    int lightLevel;
+    bool motionDetected;
+};
+
 static void DWT_Init(void)
 {
     CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
