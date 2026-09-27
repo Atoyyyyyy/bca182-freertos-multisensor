@@ -40,10 +40,18 @@
     },
 
     {
-      "type": "wokwi-rotary-encoder",
+      "type": "wokwi-ky-040",
       "id": "encoder",
       "top": 300,
       "left": 450,
+      "attrs": {}
+    },
+
+    {
+      "type": "wokwi-pir-motion-sensor",
+      "id": "pir",
+      "top": 300,
+      "left": 200,
       "attrs": {}
     }
   ],
@@ -153,6 +161,25 @@
       "encoder:SW",
       "stm32:A3",
       "yellow",
+      []
+    ],
+
+    [
+      "pir:VCC",
+      "stm32:3V3",
+      "red",
+      []
+    ],
+    [
+      "pir:GND",
+      "stm32:GND",
+      "black",
+      []
+    ],
+    [
+      "pir:OUT",
+      "stm32:A4",
+      "green",
       []
     ]
   ],

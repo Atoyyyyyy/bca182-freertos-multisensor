@@ -414,6 +414,25 @@ static void Encoder_Init(void)
 }
 
 // ============================================================
+// PIR MOTION SENSOR
+// PA4 = PIR OUT
+// ============================================================
+
+static void PIR_Init(void)
+{
+    RCC->APB2ENR |= RCC_APB2ENR_IOPAEN;
+
+    // PA4 = Input Floating
+    GPIOA->CRL &= ~(0xFU << 16);
+    GPIOA->CRL |=  (0x4U << 16);
+}
+
+static bool PIR_Read(void)
+{
+    return (GPIOA->IDR & (1U << 4)) != 0;
+}
+
+// ============================================================
 // SECTION 29
 // DISPLAY MODE NAVIGATION
 // ============================================================
@@ -1625,7 +1644,7 @@ static void SensorTask(
         data.lightLevel =
             LDR_ReadPercent();
 
-        // Motion will be added later
+        // Motion will be handled by MotionTask.
         data.motionDetected = false;
 
         // Send newest sensor data
@@ -1735,6 +1754,39 @@ static void InputTask(
         // Poll encoder every 10 ms
         vTaskDelay(
             pdMS_TO_TICKS(10)
+        );
+    }
+}
+
+// ============================================================
+// MOTION TASK
+// Priority = 3
+// SECTION 31
+//
+// PIR is monitored continuously.
+// PA4 HIGH = motion detected.
+// ============================================================
+
+static void MotionTask(
+    void *argument)
+{
+    (void)argument;
+
+    for (;;) {
+
+        bool motionDetected =
+            PIR_Read();
+
+        if (motionDetected) {
+
+            UART1_WriteString(
+                "Motion detected\r\n"
+            );
+        }
+
+        // Poll PIR every 100 ms
+        vTaskDelay(
+            pdMS_TO_TICKS(100)
         );
     }
 }
@@ -1879,6 +1931,9 @@ int main(void)
     // Rotary encoder
     Encoder_Init();
 
+    // PIR motion sensor
+    PIR_Init();
+
     // I2C / OLED
     I2C1_Init();
 
@@ -1993,6 +2048,27 @@ int main(void)
 
         UART1_WriteString(
             "ERROR: InputTask creation failed!\r\n"
+        );
+
+        while (1) {
+        }
+    }
+
+    // ========================================================
+    // MOTION TASK
+    // ========================================================
+
+    if (xTaskCreate(
+            MotionTask,
+            "MotionTask",
+            256,
+            NULL,
+            3,
+            NULL
+        ) != pdPASS) {
+
+        UART1_WriteString(
+            "ERROR: MotionTask creation failed!\r\n"
         );
 
         while (1) {
