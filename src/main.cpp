@@ -52,6 +52,25 @@ static AlarmState evaluateTemperature(
 }
 
 // ============================================================
+// SYSTEM STATE
+// SECTION 32
+// ============================================================
+
+enum class SystemState {
+    ACTIVE,
+    INACTIVE
+};
+
+static volatile SystemState currentSystemState =
+    SystemState::INACTIVE;
+
+// Laboratory testing timeout:
+// system becomes INACTIVE after 15 seconds
+// without detected motion.
+static constexpr TickType_t INACTIVITY_TIMEOUT =
+    pdMS_TO_TICKS(15000);
+
+// ============================================================
 // DISPLAY MODE
 // ============================================================
 
@@ -1644,7 +1663,7 @@ static void SensorTask(
         data.lightLevel =
             LDR_ReadPercent();
 
-        // Motion will be handled by MotionTask.
+        // Motion is handled by MotionTask.
         data.motionDetected = false;
 
         // Send newest sensor data
@@ -1761,10 +1780,17 @@ static void InputTask(
 // ============================================================
 // MOTION TASK
 // Priority = 3
-// SECTION 31
+// SECTION 32
 //
-// PIR is monitored continuously.
-// PA4 HIGH = motion detected.
+// System states:
+//
+// ACTIVE:
+// Motion has been detected recently.
+//
+// INACTIVE:
+// No motion has been detected for 15 seconds.
+//
+// PIR is monitored every 100 ms.
 // ============================================================
 
 static void MotionTask(
@@ -1772,19 +1798,69 @@ static void MotionTask(
 {
     (void)argument;
 
+    // Store the tick count of the most
+    // recent motion detection.
+    TickType_t lastMotionTime =
+        xTaskGetTickCount();
+
+    // Used so that state messages are
+    // printed only when the state changes.
+    SystemState previousState =
+        SystemState::INACTIVE;
+
     for (;;) {
+
+        TickType_t currentTime =
+            xTaskGetTickCount();
 
         bool motionDetected =
             PIR_Read();
 
         if (motionDetected) {
 
-            UART1_WriteString(
-                "Motion detected\r\n"
-            );
+            // Motion resets the inactivity timer.
+            lastMotionTime =
+                currentTime;
+
+            currentSystemState =
+                SystemState::ACTIVE;
+
+        } else {
+
+            // No motion detected.
+            // Check whether 15 seconds have elapsed.
+            if ((currentTime -
+                 lastMotionTime) >=
+                INACTIVITY_TIMEOUT) {
+
+                currentSystemState =
+                    SystemState::INACTIVE;
+            }
         }
 
-        // Poll PIR every 100 ms
+        // Report only state transitions.
+        if (currentSystemState !=
+            previousState) {
+
+            if (currentSystemState ==
+                SystemState::ACTIVE) {
+
+                UART1_WriteString(
+                    "System State: ACTIVE\r\n"
+                );
+
+            } else {
+
+                UART1_WriteString(
+                    "System State: INACTIVE\r\n"
+                );
+            }
+
+            previousState =
+                currentSystemState;
+        }
+
+        // Poll PIR every 100 ms.
         vTaskDelay(
             pdMS_TO_TICKS(100)
         );
@@ -1880,13 +1956,30 @@ static void DisplayTask(
                 );
             }
 
+            // ====================================================
+            // SECTION 32
+            // Display current system state.
+            // ====================================================
+
+            if (currentSystemState ==
+                SystemState::ACTIVE) {
+
+                UART1_WriteString(
+                    "System State: ACTIVE\r\n"
+                );
+
+            } else {
+
+                UART1_WriteString(
+                    "System State: INACTIVE\r\n"
+                );
+            }
+
             UART1_WriteString(
                 "--------------------\r\n"
             );
 
             // OLED remains owned by DisplayTask.
-            // Actual page rendering will be added
-            // when the following lab section requires it.
             OLED_ShowRoomMonitor(
                 data.temperature,
                 data.humidity,
