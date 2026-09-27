@@ -6,8 +6,8 @@
     { "type": "board-stm32-bluepill", "id": "stm32", "top": 0, "left": 0, "attrs": {} }
   ],
   "connections": [
-    [ "stm32:A9", "$serialMonitor:RX", "green", [] ],
-    [ "stm32:A10", "$serialMonitor:TX", "green", [] ]
+    ["stm32:PA9", "$serialMonitor:RX", "", []],
+    ["stm32:PA10", "$serialMonitor:TX", "", []]
   ],
   "serialMonitor": { "collapse": false, "convertEol": false, "display": "always", "newline": "lf" },
   "dependencies": {}
