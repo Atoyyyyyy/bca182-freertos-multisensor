@@ -3,19 +3,22 @@
 
 #include "FreeRTOS.h"
 #include "task.h"
+#include "queue.h"
 
-/* =========================================================
-   DWT MICROSECOND DELAY
-   System clock = 8 MHz
-   ========================================================= */
-
-   struct SensorData
+struct SensorData
 {
     float temperature;
     float humidity;
     int lightLevel;
     bool motionDetected;
 };
+
+QueueHandle_t sensorQueue;
+
+
+/* =========================================================
+   DWT DELAY
+   ========================================================= */
 
 static void DWT_Init(void)
 {
@@ -37,6 +40,7 @@ static void delay_us(uint32_t us)
     {
     }
 }
+
 
 /* =========================================================
    UART1
@@ -85,13 +89,11 @@ static void UART_SendString(const char *s)
     }
 }
 
-/*
- * Send a floating-point value with one decimal place.
- *
- * Example:
- * 24.0
- * 55.3
- */
+
+/* =========================================================
+   FLOAT OUTPUT
+   ========================================================= */
+
 static void UART_SendFloat1dp(float value)
 {
     int whole = (int)value;
@@ -126,6 +128,7 @@ static void UART_SendFloat1dp(float value)
         (char)('0' + fraction % 10)
     );
 }
+
 
 /* =========================================================
    DHT22
@@ -171,6 +174,7 @@ static int DHT_Read(void)
 {
     return (GPIOB->IDR & (1U << DHT_PIN)) ? 1 : 0;
 }
+
 
 /* =========================================================
    DHT22 READ
@@ -340,6 +344,7 @@ static int DHT22_Read(float *temperature, float *humidity)
     return 1;
 }
 
+
 /* =========================================================
    ADC1
    PA0 = LDR ANALOG INPUT
@@ -390,6 +395,7 @@ static uint16_t ADC_Read(uint8_t channel)
     return (uint16_t)ADC1->DR;
 }
 
+
 /* =========================================================
    LDR
    ADC 0-4095 -> 0-100%
@@ -401,6 +407,7 @@ static int LDR_ReadPercent(void)
 
     return ((uint32_t)raw * 100U) / 4095U;
 }
+
 
 /* =========================================================
    SECTION 22
@@ -471,6 +478,28 @@ static void SensorTask(void *argument)
         int lightPercent =
             LDR_ReadPercent();
 
+        /* -------------------------------------------------
+           SECTION 25
+           SEND SENSOR DATA TO QUEUE
+           ------------------------------------------------- */
+
+        SensorData sensorData;
+
+        sensorData.temperature = temperature;
+        sensorData.humidity = humidity;
+        sensorData.lightLevel = lightPercent;
+        sensorData.motionDetected = false;
+
+        xQueueSend(
+            sensorQueue,
+            &sensorData,
+            0
+        );
+
+        /* -------------------------------------------------
+           DISPLAY LIGHT READING
+           ------------------------------------------------- */
+
         UART_SendString(
             "Light: "
         );
@@ -526,6 +555,7 @@ static void SensorTask(void *argument)
     }
 }
 
+
 /* =========================================================
    MAIN
    ========================================================= */
@@ -553,6 +583,27 @@ int main(void)
     UART_SendString(
         "System starting...\r\n"
     );
+
+    /* -----------------------------------------------------
+       SECTION 25
+       CREATE SENSOR QUEUE
+       ----------------------------------------------------- */
+
+    sensorQueue = xQueueCreate(
+        5,
+        sizeof(SensorData)
+    );
+
+    if (sensorQueue == NULL)
+    {
+        UART_SendString(
+            "ERROR: Sensor queue creation failed\r\n"
+        );
+
+        while (1)
+        {
+        }
+    }
 
     /* -----------------------------------------------------
        CREATE SENSOR TASK
