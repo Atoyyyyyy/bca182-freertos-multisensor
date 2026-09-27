@@ -21,6 +21,20 @@ struct SensorData {
 static QueueHandle_t sensorQueue;
 
 // ============================================================
+// DISPLAY MODE
+// ============================================================
+
+enum class DisplayMode {
+    TEMPERATURE,
+    HUMIDITY,
+    LIGHT,
+    MOTION
+};
+
+static volatile DisplayMode currentDisplayMode =
+    DisplayMode::TEMPERATURE;
+
+// ============================================================
 // DWT DELAY
 // STM32F103 default clock = 8 MHz HSI
 // ============================================================
@@ -336,6 +350,36 @@ static int LDR_ReadPercent(void)
     }
 
     return percent;
+}
+
+// ============================================================
+// ROTARY ENCODER
+// PA1 = CLK
+// PA2 = DT
+// PA3 = SW
+// ============================================================
+
+static void Encoder_Init(void)
+{
+    RCC->APB2ENR |= RCC_APB2ENR_IOPAEN;
+
+    // PA1, PA2, PA3 = Input Pull-Up
+    GPIOA->CRL &= ~(
+        (0xFU << 4) |
+        (0xFU << 8) |
+        (0xFU << 12)
+    );
+
+    GPIOA->CRL |=
+        (0x8U << 4) |
+        (0x8U << 8) |
+        (0x8U << 12);
+
+    // Enable internal pull-ups
+    GPIOA->ODR |=
+        (1U << 1) |
+        (1U << 2) |
+        (1U << 3);
 }
 
 // ============================================================
@@ -1143,7 +1187,6 @@ static void OLED_DrawCharRotated180(
         0, 0, 0, 0, 0
     };
 
-    // Use the SAME glyph definitions as OLED_DrawChar()
     switch (c) {
 
         case '0':
@@ -1258,18 +1301,6 @@ static void OLED_DrawCharRotated180(
     uint16_t index =
         (uint16_t)page * 128 + x;
 
-    /*
-     * Rotate the glyph 180 degrees:
-     *
-     * Horizontal:
-     *   column 0 -> column 4
-     *   column 1 -> column 3
-     *
-     * Vertical:
-     *   bit 0 -> bit 6
-     *   bit 1 -> bit 5
-     */
-
     for (uint8_t col = 0;
          col < 5;
          col++) {
@@ -1314,10 +1345,8 @@ static void OLED_DrawStringRotated180(
         length++;
     }
 
-    /*
-     * True 180-degree rotation also reverses
-     * the order of the characters.
-     */
+    // True 180-degree rotation also reverses
+    // the order of the characters.
     for (uint8_t i = 0;
          i < length;
          i++) {
@@ -1522,6 +1551,94 @@ static void SensorTask(
 }
 
 // ============================================================
+// INPUT TASK
+// Priority = 3
+// ============================================================
+
+static void InputTask(
+    void *argument)
+{
+    (void)argument;
+
+    uint8_t previousCLK =
+        (GPIOA->IDR & (1U << 1)) ? 1 : 0;
+
+    for (;;) {
+
+        uint8_t currentCLK =
+            (GPIOA->IDR & (1U << 1)) ? 1 : 0;
+
+        uint8_t currentDT =
+            (GPIOA->IDR & (1U << 2)) ? 1 : 0;
+
+        // Detect falling edge on CLK
+        if (previousCLK == 1 &&
+            currentCLK == 0) {
+
+            if (currentDT == 1) {
+
+                // Clockwise
+                switch (currentDisplayMode) {
+
+                    case DisplayMode::TEMPERATURE:
+                        currentDisplayMode =
+                            DisplayMode::HUMIDITY;
+                        break;
+
+                    case DisplayMode::HUMIDITY:
+                        currentDisplayMode =
+                            DisplayMode::LIGHT;
+                        break;
+
+                    case DisplayMode::LIGHT:
+                        currentDisplayMode =
+                            DisplayMode::MOTION;
+                        break;
+
+                    case DisplayMode::MOTION:
+                        currentDisplayMode =
+                            DisplayMode::TEMPERATURE;
+                        break;
+                }
+
+            } else {
+
+                // Counter-clockwise
+                switch (currentDisplayMode) {
+
+                    case DisplayMode::TEMPERATURE:
+                        currentDisplayMode =
+                            DisplayMode::MOTION;
+                        break;
+
+                    case DisplayMode::HUMIDITY:
+                        currentDisplayMode =
+                            DisplayMode::TEMPERATURE;
+                        break;
+
+                    case DisplayMode::LIGHT:
+                        currentDisplayMode =
+                            DisplayMode::HUMIDITY;
+                        break;
+
+                    case DisplayMode::MOTION:
+                        currentDisplayMode =
+                            DisplayMode::LIGHT;
+                        break;
+                }
+            }
+        }
+
+        previousCLK = currentCLK;
+
+        // Poll encoder every 10 ms
+        vTaskDelay(
+            pdMS_TO_TICKS(10)
+        );
+    }
+}
+
+// ============================================================
 // DISPLAY TASK
 // Priority = 1
 // ============================================================
@@ -1614,6 +1731,9 @@ int main(void)
 
     // ADC / LDR
     ADC1_Init();
+
+    // Rotary encoder
+    Encoder_Init();
 
     // I2C / OLED
     I2C1_Init();
@@ -1708,6 +1828,27 @@ int main(void)
 
         UART1_WriteString(
             "ERROR: DisplayTask creation failed!\r\n"
+        );
+
+        while (1) {
+        }
+    }
+
+    // ========================================================
+    // INPUT TASK
+    // ========================================================
+
+    if (xTaskCreate(
+            InputTask,
+            "InputTask",
+            256,
+            NULL,
+            3,
+            NULL
+        ) != pdPASS) {
+
+        UART1_WriteString(
+            "ERROR: InputTask creation failed!\r\n"
         );
 
         while (1) {

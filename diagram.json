@@ -37,6 +37,14 @@
       "attrs": {
         "i2cAddress": "0x3C"
       }
+    },
+
+    {
+      "type": "wokwi-rotary-encoder",
+      "id": "encoder",
+      "top": 300,
+      "left": 450,
+      "attrs": {}
     }
   ],
 
@@ -114,6 +122,37 @@
       "oled:SDA",
       "stm32:B7",
       "blue",
+      []
+    ],
+
+    [
+      "encoder:VCC",
+      "stm32:3V3",
+      "red",
+      []
+    ],
+    [
+      "encoder:GND",
+      "stm32:GND",
+      "black",
+      []
+    ],
+    [
+      "encoder:CLK",
+      "stm32:A1",
+      "blue",
+      []
+    ],
+    [
+      "encoder:DT",
+      "stm32:A2",
+      "green",
+      []
+    ],
+    [
+      "encoder:SW",
+      "stm32:A3",
+      "yellow",
       []
     ]
   ],
