@@ -383,6 +383,74 @@ static void Encoder_Init(void)
 }
 
 // ============================================================
+// SECTION 29
+// DISPLAY MODE NAVIGATION
+// ============================================================
+
+static DisplayMode NextDisplayMode(
+    DisplayMode mode)
+{
+    switch (mode) {
+
+        case DisplayMode::TEMPERATURE:
+            return DisplayMode::HUMIDITY;
+
+        case DisplayMode::HUMIDITY:
+            return DisplayMode::LIGHT;
+
+        case DisplayMode::LIGHT:
+            return DisplayMode::MOTION;
+
+        case DisplayMode::MOTION:
+            return DisplayMode::TEMPERATURE;
+    }
+
+    return DisplayMode::TEMPERATURE;
+}
+
+static DisplayMode PreviousDisplayMode(
+    DisplayMode mode)
+{
+    switch (mode) {
+
+        case DisplayMode::TEMPERATURE:
+            return DisplayMode::MOTION;
+
+        case DisplayMode::HUMIDITY:
+            return DisplayMode::TEMPERATURE;
+
+        case DisplayMode::LIGHT:
+            return DisplayMode::HUMIDITY;
+
+        case DisplayMode::MOTION:
+            return DisplayMode::LIGHT;
+    }
+
+    return DisplayMode::TEMPERATURE;
+}
+
+static const char *DisplayModeName(
+    DisplayMode mode)
+{
+    switch (mode) {
+
+        case DisplayMode::TEMPERATURE:
+            return "TEMPERATURE";
+
+        case DisplayMode::HUMIDITY:
+            return "HUMIDITY";
+
+        case DisplayMode::LIGHT:
+            return "LIGHT";
+
+        case DisplayMode::MOTION:
+            return "MOTION";
+    }
+
+    return "UNKNOWN";
+}
+
+// ============================================================
 // I2C1
 // PB6 = SCL
 // PB7 = SDA
@@ -1553,6 +1621,16 @@ static void SensorTask(
 // ============================================================
 // INPUT TASK
 // Priority = 3
+//
+// SECTION 29 NAVIGATION
+//
+// Clockwise:
+// TEMPERATURE -> HUMIDITY -> LIGHT -> MOTION
+// -> TEMPERATURE
+//
+// Counterclockwise:
+// TEMPERATURE -> MOTION -> LIGHT -> HUMIDITY
+// -> TEMPERATURE
 // ============================================================
 
 static void InputTask(
@@ -1571,61 +1649,59 @@ static void InputTask(
         uint8_t currentDT =
             (GPIOA->IDR & (1U << 2)) ? 1 : 0;
 
-        // Detect falling edge on CLK
+        // Detect falling edge on CLK.
         if (previousCLK == 1 &&
             currentCLK == 0) {
 
             if (currentDT == 1) {
 
-                // Clockwise
-                switch (currentDisplayMode) {
+                // ====================================================
+                // CLOCKWISE
+                // ====================================================
 
-                    case DisplayMode::TEMPERATURE:
-                        currentDisplayMode =
-                            DisplayMode::HUMIDITY;
-                        break;
+                currentDisplayMode =
+                    NextDisplayMode(
+                        currentDisplayMode
+                    );
 
-                    case DisplayMode::HUMIDITY:
-                        currentDisplayMode =
-                            DisplayMode::LIGHT;
-                        break;
+                UART1_WriteString(
+                    "Encoder Clockwise -> "
+                );
 
-                    case DisplayMode::LIGHT:
-                        currentDisplayMode =
-                            DisplayMode::MOTION;
-                        break;
+                UART1_WriteString(
+                    DisplayModeName(
+                        currentDisplayMode
+                    )
+                );
 
-                    case DisplayMode::MOTION:
-                        currentDisplayMode =
-                            DisplayMode::TEMPERATURE;
-                        break;
-                }
+                UART1_WriteString(
+                    "\r\n"
+                );
 
             } else {
 
-                // Counter-clockwise
-                switch (currentDisplayMode) {
+                // ====================================================
+                // COUNTERCLOCKWISE
+                // ====================================================
 
-                    case DisplayMode::TEMPERATURE:
-                        currentDisplayMode =
-                            DisplayMode::MOTION;
-                        break;
+                currentDisplayMode =
+                    PreviousDisplayMode(
+                        currentDisplayMode
+                    );
 
-                    case DisplayMode::HUMIDITY:
-                        currentDisplayMode =
-                            DisplayMode::TEMPERATURE;
-                        break;
+                UART1_WriteString(
+                    "Encoder Counterclockwise -> "
+                );
 
-                    case DisplayMode::LIGHT:
-                        currentDisplayMode =
-                            DisplayMode::HUMIDITY;
-                        break;
+                UART1_WriteString(
+                    DisplayModeName(
+                        currentDisplayMode
+                    )
+                );
 
-                    case DisplayMode::MOTION:
-                        currentDisplayMode =
-                            DisplayMode::LIGHT;
-                        break;
-                }
+                UART1_WriteString(
+                    "\r\n"
+                );
             }
         }
 
@@ -1698,7 +1774,9 @@ static void DisplayTask(
                 "--------------------\r\n"
             );
 
-            // OLED owned by DisplayTask
+            // OLED remains owned by DisplayTask.
+            // Actual page rendering will be added
+            // when the following lab section requires it.
             OLED_ShowRoomMonitor(
                 data.temperature,
                 data.humidity,
