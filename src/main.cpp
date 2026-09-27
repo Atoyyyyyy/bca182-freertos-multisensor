@@ -21,6 +21,37 @@ struct SensorData {
 static QueueHandle_t sensorQueue;
 
 // ============================================================
+// ALARM LOGIC
+// SECTION 30
+// ============================================================
+
+enum class AlarmState {
+    NORMAL,
+    LOW_TEMPERATURE,
+    HIGH_TEMPERATURE
+};
+
+// Temperature thresholds
+static constexpr float LOW_TEMPERATURE_THRESHOLD = 18.0f;
+static constexpr float HIGH_TEMPERATURE_THRESHOLD = 30.0f;
+
+// Pure temperature decision logic.
+// This function does not access any hardware.
+static AlarmState evaluateTemperature(
+    float temperature)
+{
+    if (temperature < LOW_TEMPERATURE_THRESHOLD) {
+        return AlarmState::LOW_TEMPERATURE;
+    }
+
+    if (temperature > HIGH_TEMPERATURE_THRESHOLD) {
+        return AlarmState::HIGH_TEMPERATURE;
+    }
+
+    return AlarmState::NORMAL;
+}
+
+// ============================================================
 // DISPLAY MODE
 // ============================================================
 
@@ -1655,10 +1686,7 @@ static void InputTask(
 
             if (currentDT == 1) {
 
-                // ====================================================
                 // CLOCKWISE
-                // ====================================================
-
                 currentDisplayMode =
                     NextDisplayMode(
                         currentDisplayMode
@@ -1680,10 +1708,7 @@ static void InputTask(
 
             } else {
 
-                // ====================================================
                 // COUNTERCLOCKWISE
-                // ====================================================
-
                 currentDisplayMode =
                     PreviousDisplayMode(
                         currentDisplayMode
@@ -1770,6 +1795,39 @@ static void DisplayTask(
                 " %\r\n"
             );
 
+            // ====================================================
+            // SECTION 30
+            // Evaluate temperature alarm state.
+            // Hardware buzzer control is intentionally separate.
+            // ====================================================
+
+            AlarmState alarmState =
+                evaluateTemperature(
+                    data.temperature
+                );
+
+            if (alarmState ==
+                AlarmState::LOW_TEMPERATURE) {
+
+                UART1_WriteString(
+                    "Alarm State: LOW TEMPERATURE\r\n"
+                );
+
+            } else if (
+                alarmState ==
+                AlarmState::HIGH_TEMPERATURE) {
+
+                UART1_WriteString(
+                    "Alarm State: HIGH TEMPERATURE\r\n"
+                );
+
+            } else {
+
+                UART1_WriteString(
+                    "Alarm State: NORMAL\r\n"
+                );
+            }
+
             UART1_WriteString(
                 "--------------------\r\n"
             );
@@ -1796,8 +1854,16 @@ int main(void)
 
     UART1_Init();
 
+    // ========================================================
+    // STARTUP MESSAGE
+    // ========================================================
+
     UART1_WriteString(
-        "\r\nSystem starting...\r\n"
+        "\r\nBCA182 FreeRTOS Multisensor\r\n"
+    );
+
+    UART1_WriteString(
+        "System starting...\r\n"
     );
 
     // Enable GPIOB clock
