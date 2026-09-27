@@ -1,6 +1,21 @@
 #include "stm32f1xx.h"
 #include <string.h>
 
+static void LED_Init(void)
+{
+    RCC->APB2ENR |= RCC_APB2ENR_IOPCEN;
+    GPIOC->CRH &= ~(0xF << 20);
+    GPIOC->CRH |=  (0x2 << 20);
+}
+
+static void LED_On(void)  { GPIOC->ODR &= ~GPIO_ODR_ODR13; }
+static void LED_Off(void) { GPIOC->ODR |=  GPIO_ODR_ODR13; }
+
+static void Delay_Crude(volatile uint32_t count)
+{
+    while (count--) { }
+}
+
 static void UART_Init(void)
 {
     RCC->APB2ENR |= RCC_APB2ENR_IOPAEN | RCC_APB2ENR_AFIOEN | RCC_APB2ENR_USART1EN;
@@ -25,13 +40,21 @@ static void UART_SendString(const char *s)
 
 int main(void)
 {
+    LED_Init();
     UART_Init();
+
+    for (int i = 0; i < 3; i++)
+    {
+        LED_On();
+        Delay_Crude(800000);
+        LED_Off();
+        Delay_Crude(800000);
+    }
 
     for (;;)
     {
         UART_SendString("BCA182 FreeRTOS Multisensor\r\n");
         UART_SendString("System starting...\r\n");
-
-        for (volatile int i = 0; i < 1000000; i++) { }
+        Delay_Crude(1000000);
     }
 }
