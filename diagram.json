@@ -31,8 +31,8 @@
     {
       "type": "board-ssd1306",
       "id": "oled",
-      "top": 40,
-      "left": 400,
+      "top": -50,
+      "left": 100,
       "rotate": 180,
       "attrs": {
         "i2cAddress": "0x3C"
@@ -52,6 +52,14 @@
       "id": "pir",
       "top": 300,
       "left": 200,
+      "attrs": {}
+    },
+
+    {
+      "type": "wokwi-buzzer",
+      "id": "buzzer",
+      "top": 180,
+      "left": 500,
       "attrs": {}
     }
   ],
@@ -84,7 +92,7 @@
     ],
     [
       "dht22:SDA",
-      "stm32:B0",
+      "stm32:A1",
       "blue",
       []
     ],
@@ -147,20 +155,14 @@
     ],
     [
       "encoder:CLK",
-      "stm32:A1",
+      "stm32:A4",
       "blue",
       []
     ],
     [
       "encoder:DT",
-      "stm32:A2",
+      "stm32:A5",
       "green",
-      []
-    ],
-    [
-      "encoder:SW",
-      "stm32:A3",
-      "yellow",
       []
     ],
 
@@ -178,10 +180,23 @@
     ],
     [
       "pir:OUT",
-      "stm32:A4",
+      "stm32:A3",
       "green",
       []
-    ]
+    ],
+
+    [
+      "buzzer:1",
+      "stm32:A2",
+        "purple",
+       []
+],
+[
+       "buzzer:2",
+       "stm32:GND",
+       "black",
+       []
+]
   ],
 
   "serialMonitor": {

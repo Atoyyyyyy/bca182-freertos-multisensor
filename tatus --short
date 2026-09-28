@@ -1,0 +1,34 @@
+warning: in the working copy of 'diagram.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'lib/FreeRTOS/portable/GCC/ARM_CM3/port.c', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'lib/FreeRTOS/portable/GCC/ARM_CM3/portmacro.h', LF will be replaced by CRLF the next time Git touches it
+ diagram.json                                   |     2 [32m+[m[31m-[m
+ lib/FreeRTOS/croutine.c                        |   586 [32m+[m[31m-[m
+ lib/FreeRTOS/event_groups.c                    |  1440 [32m+[m[31m--[m
+ lib/FreeRTOS/include/FreeRTOS.h                |  3256 [32m++++[m[31m--[m
+ lib/FreeRTOS/include/FreeRTOSConfig_template.h |   162 [31m-[m
+ lib/FreeRTOS/include/StackMacros.h             |   115 [32m+[m[31m-[m
+ lib/FreeRTOS/include/atomic.h                  |   279 [32m+[m[31m-[m
+ lib/FreeRTOS/include/croutine.h                |   839 [32m+[m[31m-[m
+ lib/FreeRTOS/include/deprecated_definitions.h  |   168 [32m+[m[31m-[m
+ lib/FreeRTOS/include/event_groups.h            |   843 [32m+[m[31m-[m
+ lib/FreeRTOS/include/list.h                    |   313 [32m+[m[31m-[m
+ lib/FreeRTOS/include/message_buffer.h          |   732 [32m+[m[31m-[m
+ lib/FreeRTOS/include/mpu_prototypes.h          |   500 [32m+[m[31m-[m
+ lib/FreeRTOS/include/mpu_wrappers.h            |   425 [32m+[m[31m-[m
+ lib/FreeRTOS/include/portable.h                |   241 [32m+[m[31m-[m
+ lib/FreeRTOS/include/projdefs.h                |   156 [32m+[m[31m-[m
+ lib/FreeRTOS/include/queue.h                   |  1897 [32m++[m[31m--[m
+ lib/FreeRTOS/include/semphr.h                  |  1031 [32m+[m[31m-[m
+ lib/FreeRTOS/include/stack_macros.h            |   152 [32m+[m[31m-[m
+ lib/FreeRTOS/include/stream_buffer.h           |  1003 [32m+[m[31m-[m
+ lib/FreeRTOS/include/task.h                    |  3518 [32m+++++[m[31m--[m
+ lib/FreeRTOS/include/timers.h                  |   518 [32m+[m[31m-[m
+ lib/FreeRTOS/list.c                            |   330 [32m+[m[31m-[m
+ lib/FreeRTOS/portable/GCC/ARM_CM3/port.c       |   870 [32m+[m[31m-[m
+ lib/FreeRTOS/portable/GCC/ARM_CM3/portmacro.h  |    20 [32m+[m[31m-[m
+ lib/FreeRTOS/portable/MemMang/heap_4.c         |   906 [32m+[m[31m-[m
+ lib/FreeRTOS/queue.c                           |  5523 [32m+++++[m[31m-----[m
+ lib/FreeRTOS/stream_buffer.c                   |  2632 [32m+++[m[31m--[m
+ lib/FreeRTOS/tasks.c                           | 12791 [32m+++++++++++++++[m[31m--------[m
+ lib/FreeRTOS/timers.c                          |  2064 [32m++[m[31m--[m
+ 30 files changed, 26546 insertions(+), 16766 deletions(-)

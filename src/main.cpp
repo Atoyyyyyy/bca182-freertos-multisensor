@@ -8,6 +8,12 @@
 #include "app.h"
 #include "hardware.h"
 #include "oled.h"
+#include "serial_mutex.h"
+#include "sensors.h"
+#include "display.h"
+#include "alarm.h"
+#include "motion.h"
+#include "state.h"
 
 // ============================================================
 // SYSTEM CLOCK
@@ -61,7 +67,12 @@ static void SystemClock_Config()
 
 // ============================================================
 // MAIN
+//
+// The real firmware main() is excluded during PlatformIO
+// unit testing so the test runner can provide its own main().
 // ============================================================
+
+#ifndef PIO_UNIT_TESTING
 
 int main(void)
 {
@@ -85,6 +96,15 @@ int main(void)
 
     UART1_Init();
 
+    // ========================================================
+    // UART MUTEX
+    //
+    // UART1 is shared by multiple FreeRTOS tasks.
+    // Create the mutex before any tasks start.
+    // ========================================================
+
+    SerialMutex_Init();
+
     UART1_WriteString(
         "\r\nBCA182 FreeRTOS Multisensor\r\n"
     );
@@ -107,10 +127,6 @@ int main(void)
     PIR_Init();
 
     UART1_WriteString(
-        "PIR initialized: PA3\r\n"
-    );
-
-    UART1_WriteString(
         "GPIO initialization complete.\r\n"
     );
 
@@ -119,18 +135,17 @@ int main(void)
     //
     // PA4 = CLK
     // PA5 = DT
-    //
-    // Encoder is initialized after the other GPIO setup.
     // ========================================================
 
     Encoder_Init();
 
     // ========================================================
     // I2C / OLED INITIALIZATION
-    // ========================================================
-
+    //
     // PB6 = I2C1 SCL
     // PB7 = I2C1 SDA
+    // ========================================================
+
     I2C1_Init();
 
     UART1_WriteString(
@@ -272,17 +287,6 @@ int main(void)
     UART1_WriteString(
         "System State: ACTIVE\r\n"
     );
-
-    // ========================================================
-    // TASK DECLARATIONS
-    // ========================================================
-
-    extern void SensorTask(void *);
-    extern void DisplayTask(void *);
-    extern void InputTask(void *);
-    extern void MotionTask(void *);
-    extern void StateTask(void *);
-    extern void AlarmTask(void *);
 
     // ========================================================
     // MotionTask
@@ -441,3 +445,5 @@ int main(void)
     {
     }
 }
+
+#endif

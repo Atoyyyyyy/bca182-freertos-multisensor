@@ -5,7 +5,9 @@
 #include "FreeRTOS.h"
 #include "task.h"
 
+#include "app.h"
 #include "hardware.h"
+#include "serial_mutex.h"
 
 // ============================================================
 // ROTARY ENCODER
@@ -13,7 +15,7 @@
 // PA4 = CLK
 // PA5 = DT
 //
-// Polling is used so this works with the current Wokwi setup.
+// Polling is used with the current Wokwi setup.
 //
 // CLK falling edge:
 //     DT HIGH -> +1
@@ -88,7 +90,9 @@ void Encoder_Init()
     encoderSteps =
         0;
 
-    UART1_WriteString(
+    // UART is shared by the application.
+    // Route this message through the mutex.
+    Serial_WriteString(
         "Encoder initialized: PA4 CLK, PA5 DT\r\n"
     );
 }
@@ -96,8 +100,7 @@ void Encoder_Init()
 // ============================================================
 // UPDATE ENCODER
 //
-// Every time CLK changes from HIGH -> LOW, read DT and
-// determine the direction.
+// Detects a falling edge on CLK and reads DT for direction.
 // ============================================================
 
 static void Encoder_Update()
@@ -167,4 +170,148 @@ int Encoder_ReadStep()
 bool Encoder_ButtonPressed()
 {
     return false;
+}
+
+// ============================================================
+// INPUT TASK
+//
+// CLOCKWISE:
+//     TEMPERATURE
+//       -> HUMIDITY
+//       -> MOTION
+//       -> LIGHT
+//       -> ALERT
+//       -> TEMPERATURE
+//
+// COUNTERCLOCKWISE:
+//     TEMPERATURE
+//       -> ALERT
+//       -> LIGHT
+//       -> MOTION
+//       -> HUMIDITY
+//       -> TEMPERATURE
+// ============================================================
+
+void InputTask(void *argument)
+{
+    (void)argument;
+
+    currentDisplayMode =
+        DisplayMode::TEMPERATURE;
+
+    Serial_WriteString(
+        "InputTask started\r\n"
+    );
+
+    for (;;)
+    {
+        int steps =
+            Encoder_ReadStep();
+
+        // ----------------------------------------------------
+        // CLOCKWISE
+        // ----------------------------------------------------
+
+        while (steps > 0)
+        {
+            switch (currentDisplayMode)
+            {
+                case DisplayMode::TEMPERATURE:
+
+                    currentDisplayMode =
+                        DisplayMode::HUMIDITY;
+
+                    break;
+
+                case DisplayMode::HUMIDITY:
+
+                    currentDisplayMode =
+                        DisplayMode::MOTION;
+
+                    break;
+
+                case DisplayMode::MOTION:
+
+                    currentDisplayMode =
+                        DisplayMode::LIGHT;
+
+                    break;
+
+                case DisplayMode::LIGHT:
+
+                    currentDisplayMode =
+                        DisplayMode::ALERT;
+
+                    break;
+
+                case DisplayMode::ALERT:
+
+                    currentDisplayMode =
+                        DisplayMode::TEMPERATURE;
+
+                    break;
+            }
+
+            Serial_WriteString(
+                "ENCODER: CLOCKWISE -> DISPLAY CHANGED\r\n"
+            );
+
+            steps--;
+        }
+
+        // ----------------------------------------------------
+        // COUNTERCLOCKWISE
+        // ----------------------------------------------------
+
+        while (steps < 0)
+        {
+            switch (currentDisplayMode)
+            {
+                case DisplayMode::TEMPERATURE:
+
+                    currentDisplayMode =
+                        DisplayMode::ALERT;
+
+                    break;
+
+                case DisplayMode::ALERT:
+
+                    currentDisplayMode =
+                        DisplayMode::LIGHT;
+
+                    break;
+
+                case DisplayMode::LIGHT:
+
+                    currentDisplayMode =
+                        DisplayMode::MOTION;
+
+                    break;
+
+                case DisplayMode::MOTION:
+
+                    currentDisplayMode =
+                        DisplayMode::HUMIDITY;
+
+                    break;
+
+                case DisplayMode::HUMIDITY:
+
+                    currentDisplayMode =
+                        DisplayMode::TEMPERATURE;
+
+                    break;
+            }
+
+            Serial_WriteString(
+                "ENCODER: COUNTERCLOCKWISE -> DISPLAY CHANGED\r\n"
+            );
+
+            steps++;
+        }
+
+        vTaskDelay(
+            pdMS_TO_TICKS(50)
+        );
+    }
 }

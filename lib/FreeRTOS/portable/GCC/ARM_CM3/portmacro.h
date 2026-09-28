@@ -76,21 +76,11 @@ typedef unsigned long UBaseType_t;
 /*-----------------------------------------------------------*/
 
 /* Scheduler utilities. */
-#define portYIELD() 															\
-{																				\
-	/* Set a PendSV to request a context switch. */								\
-	portNVIC_INT_CTRL_REG = portNVIC_PENDSVSET_BIT;								\
-																				\
-	/* Barriers are normally not required but do ensure the code is completely	\
-	within the specified behaviour for the architecture. */						\
-	__asm volatile( "dsb" ::: "memory" );										\
-	__asm volatile( "isb" );													\
-}
-
-#define portNVIC_INT_CTRL_REG		( * ( ( volatile uint32_t * ) 0xe000ed04 ) )
-#define portNVIC_PENDSVSET_BIT		( 1UL << 28UL )
-#define portEND_SWITCHING_ISR( xSwitchRequired ) if( xSwitchRequired != pdFALSE ) portYIELD()
-#define portYIELD_FROM_ISR( x ) portEND_SWITCHING_ISR( x )
+extern void vPortYieldDirect( void );
+#define portYIELD()                  vPortYieldDirect()
+#define portEND_SWITCHING_ISR( xSwitchRequired ) \
+    do { if( ( xSwitchRequired ) != pdFALSE ) { vPortYieldDirect(); } } while( 0 )
+#define portYIELD_FROM_ISR( x )      portEND_SWITCHING_ISR( x )
 /*-----------------------------------------------------------*/
 
 /* Critical section management. */
