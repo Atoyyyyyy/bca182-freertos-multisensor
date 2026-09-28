@@ -326,41 +326,15 @@ The low-severity findings were primarily unused-function and style observations 
 
 ### Wokwi Simulation
 
-Place your Wokwi screenshot at:
-
-```text
-docs/images/wokwi.png
-```
-
-Then embed it with:
-
-```markdown
-![Wokwi simulation](docs/images/wokwi.png)
-```
+![Wokwi Simulation](docs/images/wokwi.png)
 
 ### Unit Test Result
 
-Place the terminal screenshot at:
-
-```text
-docs/images/unit-tests.png
-```
-
-```markdown
-![Unit tests](docs/images/unit-tests.png)
-```
+![Unit Test Result](docs/images/unit-tests.png)
 
 ### Static Analysis Result
 
-Place the Cppcheck screenshot at:
-
-```text
-docs/images/cppcheck.png
-```
-
-```markdown
-![Cppcheck result](docs/images/cppcheck.png)
-```
+![Cppcheck Result](docs/images/cppcheck.png)
 
 ## Contributors
 
