@@ -326,41 +326,21 @@ The low-severity findings were primarily unused-function and style observations 
 
 ### Wokwi Simulation
 
-Place your Wokwi screenshot at:
-
-```text
-docs/images/wokwi.png
-```
-
-Then embed it with:
-
-```markdown
 ![Wokwi simulation](docs/images/wokwi.png)
-```
+
+*Figure 1. Wokwi simulation of the STM32F103 Blue Pill multisensor system.*
 
 ### Unit Test Result
 
-Place the terminal screenshot at:
-
-```text
-docs/images/unit-tests.png
-```
-
-```markdown
 ![Unit tests](docs/images/unit-tests.png)
-```
+
+*Figure 2. Unity unit-test execution showing 15 tests passed with 0 failures.*
 
 ### Static Analysis Result
 
-Place the Cppcheck screenshot at:
-
-```text
-docs/images/cppcheck.png
-```
-
-```markdown
 ![Cppcheck result](docs/images/cppcheck.png)
-```
+
+*Figure 3. Cppcheck static-analysis result showing 0 high-, 0 medium-, and 35 low-severity findings.*
 
 ## Contributors
 
