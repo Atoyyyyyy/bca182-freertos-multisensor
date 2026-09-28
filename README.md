@@ -326,28 +326,49 @@ The low-severity findings were primarily unused-function and style observations 
 
 ### Wokwi Simulation
 
-![Wokwi simulation](docs/images/wokwi.png)
+Place your Wokwi screenshot at:
 
-*Figure 1. Wokwi simulation of the STM32F103 Blue Pill multisensor system.*
+```text
+docs/images/wokwi.png
+```
+
+Then embed it with:
+
+```markdown
+![Wokwi simulation](docs/images/wokwi.png)
+```
 
 ### Unit Test Result
 
-![Unit tests](docs/images/unit-tests.png)
+Place the terminal screenshot at:
 
-*Figure 2. Unity unit-test execution showing 15 tests passed with 0 failures.*
+```text
+docs/images/unit-tests.png
+```
+
+```markdown
+![Unit tests](docs/images/unit-tests.png)
+```
 
 ### Static Analysis Result
 
-![Cppcheck result](docs/images/cppcheck.png)
+Place the Cppcheck screenshot at:
 
-*Figure 3. Cppcheck static-analysis result showing 0 high-, 0 medium-, and 35 low-severity findings.*
+```text
+docs/images/cppcheck.png
+```
+
+```markdown
+![Cppcheck result](docs/images/cppcheck.png)
+```
 
 ## Contributors
 
-Add your team members as repository collaborators on GitHub so they can push their own commits. GitHub attributes repository contributions to commit emails associated with each user's GitHub account. Contributions on the default branch can take up to 24 hours to appear in the contributors graph.
+### Renato G. Beroy
 
 ## Author
 
-**BCA182 FreeRTOS Multisensor Team**
+**Renato G. Beroy**
 
+BCA182 FreeRTOS Multisensor Team  
 Developed for academic laboratory work.
