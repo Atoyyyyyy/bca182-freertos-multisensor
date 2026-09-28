@@ -1,20 +1,6 @@
-#include "app.h"
-
-// ============================================================
-// TEMPERATURE ALARM LOGIC
-// ============================================================
-
-AlarmState evaluateTemperature(float temperature)
-{
-    if (temperature < 18.0f)
-    {
-        return AlarmState::LOW_TEMPERATURE;
-    }
-
-    if (temperature > 30.0f)
-    {
-        return AlarmState::HIGH_TEMPERATURE;
-    }
-
-    return AlarmState::NORMAL;
-}
+// task.cpp
+//
+// Temperature alarm logic has been moved to
+// temperature_alarm.cpp.
+//
+// This file is intentionally left without an implementation.
